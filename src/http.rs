@@ -16,9 +16,6 @@ use err_derive::Error;
 use log::{error, info};
 use reqwest::{blocking, Error as ReqwestError, header, StatusCode};
 use std::{collections::HashMap, string::String, vec::Vec};
-use transport_protocol::{
-    ProxyAttestationServerResponse, TransportProtocolError,
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Errors.
@@ -40,22 +37,11 @@ pub enum HttpError {
     #[error(display = "Response did not contain an expected field.")]
     PoorlyFormedResponse,
     #[error(
-        display = "A transport protocol message could not be (de)serialized: {}.",
-        _0
-    )]
-    SerializationError(TransportProtocolError),
-    #[error(
         display = "A base64-encoded message could not be (de)serialized: {}.",
         _0
     )]
     Base64Error(base64::DecodeError),
-    #[error(display = "A transport protocol error occurred: {}.", _0)]
-    TransportProtocolError(TransportProtocolError),
-    #[error(display = "An attestation-related error occurred: {}.", _0)]
-    AttestationError(TransportProtocolError),
     #[error(display = "The proxy attestation service issued an unexpected reply.")]
-    ProtocolError(ProxyAttestationServerResponse),
-    #[error(display = "Unable to convert bytes to UTF8: {}.", _0)]
     Utf8Error(std::str::Utf8Error),
 }
 

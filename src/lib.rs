@@ -21,7 +21,7 @@ mod http;
 #[derive(Debug, Error)]
 pub enum ProxyAttestationClientError {
     #[error(display = "ProxyAttestationClient: HttpError: {:?}", _0)]
-    HttpError(io_utils::http::HttpError),
+    HttpError(http::HttpError),
     #[error(display = "ProxyAttestationClient: Bad Response")]
     BadResponse,
 }
@@ -40,14 +40,14 @@ pub fn start_proxy_attestation<U: AsRef<str>>(
     let url = format!("http://{}/proxy/v1/Start", proxy_attestation_server_url_base);
     let empty_buffer: String = "".to_string();
 
-    let (id, nonce) = match post_buffer(&url, &empty_buffer, None).map_err(|e| {
+    let (id, nonce) = match http::post_buffer(&url, &empty_buffer, None).map_err(|e| {
             error!(
                 "Failed to send proxy attestation service start message.  Error produced: {}.",
                 e
             );
             e
         })? {
-        HttpResponse::Created(location, body) => {
+        http::HttpResponse::Created(location, body) => {
             (location, body)
         }
         non_created => {
@@ -77,10 +77,10 @@ pub fn complete_proxy_attestation_nitro(
     form_fields.insert("token".to_string(), base64::encode(att_doc));
     form_fields.insert("csr".to_string(), base64::encode(csr));
 
-    let response = post_form(url, &form_fields)
+    let response = http::post_form(url, &form_fields)
         .map_err(|err| ProxyAttestationClientError::HttpError(err))?;
     match response {
-        HttpResponse::Ok(data) => return Ok(data),
+        http::HttpResponse::Ok(data) => return Ok(data),
         _ => return Err(anyhow!(ProxyAttestationClientError::BadResponse)),
     }
 }
@@ -96,10 +96,10 @@ pub fn complete_proxy_attestation_linux(
     form_fields.insert("token".to_string(), base64::encode(token));
     form_fields.insert("csr".to_string(), base64::encode(csr));
 
-    let response = post_form(url, &form_fields)
+    let response = http::post_form(url, &form_fields)
         .map_err(|err| ProxyAttestationClientError::HttpError(err))?;
     match response {
-        HttpResponse::Ok(data) => return Ok(data),
+        http::HttpResponse::Ok(data) => return Ok(data),
         _ => return Err(anyhow!(ProxyAttestationClientError::BadResponse)),
     }
 }

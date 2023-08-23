@@ -103,3 +103,22 @@ pub fn complete_proxy_attestation_linux(
         _ => return Err(anyhow!(ProxyAttestationClientError::BadResponse)),
     }
 }
+
+pub fn complete_proxy_attestation_sev(
+    proxy_attestation_server_url: &str,
+    report: &[u8],
+    csr: &[u8],
+    challenge_id: Uuid,
+) -> AnyhowResult<Vec<u8>> {
+    let url = format!("http://{:}/proxy/v1/SEV/{:}", proxy_attestation_server_url, challenge_id);
+    let mut form_fields: HashMap<String, String> = HashMap::new();
+    form_fields.insert("token".to_string(), base64::encode(report));
+    form_fields.insert("csr".to_string(), base64::encode(csr));
+
+    let response = http::post_form(url, &form_fields)
+        .map_err(|err| ProxyAttestationClientError::HttpError(err))?;
+    match response {
+        http::HttpResponse::Ok(data) => return Ok(data),
+        _ => return Err(anyhow!(ProxyAttestationClientError::BadResponse)),
+    }
+}
